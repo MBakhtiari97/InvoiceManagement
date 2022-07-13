@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using InvoiceManagement.Data;
+using InvoiceManagement.Data.Models;
 
 namespace InvoiceManagement.Pages.Invoices
 {
