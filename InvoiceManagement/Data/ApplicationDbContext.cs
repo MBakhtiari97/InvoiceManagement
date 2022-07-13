@@ -9,5 +9,7 @@ namespace InvoiceManagement.Data
             : base(options)
         {
         }
+
+        public DbSet<Invoice> Invoices { get; set; }
     }
 }

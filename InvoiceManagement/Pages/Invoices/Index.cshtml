@@ -1,0 +1,48 @@
+﻿@page
+@model InvoiceManagement.Pages.Invoices.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Invoice[0].InvoiceAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Invoice[0].InvoiceMonth)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Invoice[0].InvoiceOwner)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Invoice) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.InvoiceAmount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InvoiceMonth)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InvoiceOwner)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.InvoiceId">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.InvoiceId">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.InvoiceId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
