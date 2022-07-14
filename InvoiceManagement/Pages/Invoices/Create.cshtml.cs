@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InvoiceManagement.Authorization;
 using InvoiceManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -30,17 +31,24 @@ namespace InvoiceManagement.Pages.Invoices
         [BindProperty]
         public Invoice Invoice { get; set; } = default!;
 
-
-        // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid || _context.Invoices == null || Invoice == null)
+            //first setting the creator id by the GetUserId method 
+            Invoice.CreatorId = UserManager.GetUserId(User);
+
+            //Checking the user has access to do this operation or not
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, Invoice, InvoiceOperations.Create);
+
+            //If the authorization was not succeed then the user has no access to do this operation and will return forbid
+            if (!isAuthorized.Succeeded)
             {
-                return Page();
+                return Forbid();
             }
 
-            _context.Invoices.Add(Invoice);
-            await _context.SaveChangesAsync();
+            //Adding newly created invoice
+            Context.Invoices.Add(Invoice);
+            await Context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
         }
