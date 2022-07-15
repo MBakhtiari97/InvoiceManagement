@@ -34,7 +34,7 @@ namespace InvoiceManagement.Pages.Invoices
                 return NotFound();
             }
 
-            var invoice =  await Context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice = await Context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
             if (invoice == null)
             {
                 return NotFound();
@@ -55,13 +55,28 @@ namespace InvoiceManagement.Pages.Invoices
         }
 
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int id)
         {
-            if (!ModelState.IsValid)
+
+            var invoice = await Context.Invoices
+                .AsNoTracking()
+                .SingleOrDefaultAsync(m => m.InvoiceId == id);
+
+            if (invoice == null)
+                return NotFound();
+
+            Invoice.CreatorId = invoice.CreatorId;
+
+            //Authorization 
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, Invoice, InvoiceOperations.Update);
+
+            if (!isAuthorized.Succeeded)
             {
-                return Page();
+                return Forbid();
             }
 
+            //Update
             Context.Attach(Invoice).State = EntityState.Modified;
 
             try
@@ -85,7 +100,7 @@ namespace InvoiceManagement.Pages.Invoices
 
         private bool InvoiceExists(int id)
         {
-          return (Context.Invoices?.Any(e => e.InvoiceId == id)).GetValueOrDefault();
+            return (Context.Invoices?.Any(e => e.InvoiceId == id)).GetValueOrDefault();
         }
     }
 }

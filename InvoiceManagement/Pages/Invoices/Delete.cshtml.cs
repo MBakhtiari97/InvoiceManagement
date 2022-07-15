@@ -2,20 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InvoiceManagement.Authorization;
+using InvoiceManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using InvoiceManagement.Data.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace InvoiceManagement.Pages.Invoices
 {
-    public class DeleteModel : PageModel
+    public class DeleteModel : DI_BasePageModel
     {
-        private readonly InvoiceManagement.Data.ApplicationDbContext _context;
 
-        public DeleteModel(InvoiceManagement.Data.ApplicationDbContext context)
+        public DeleteModel(ApplicationDbContext context,
+            IAuthorizationService authorizationService,
+            UserManager<IdentityUser> userManager)
+            : base(context, authorizationService, userManager)
         {
-            _context = context;
         }
 
         [BindProperty]
@@ -23,12 +28,12 @@ namespace InvoiceManagement.Pages.Invoices
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Invoices == null)
+            if (id == null || Context.Invoices == null)
             {
                 return NotFound();
             }
 
-            var invoice = await _context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice = await Context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
 
             if (invoice == null)
             {
@@ -38,22 +43,41 @@ namespace InvoiceManagement.Pages.Invoices
             {
                 Invoice = invoice;
             }
+
+            //Authorization
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, invoice, InvoiceOperations.Delete);
+
+            if (!isAuthorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null || _context.Invoices == null)
+            if (id == null || Context.Invoices == null)
             {
                 return NotFound();
             }
-            var invoice = await _context.Invoices.FindAsync(id);
+            var invoice = await Context.Invoices.FindAsync(id);
+
+            //Authorization
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, invoice, InvoiceOperations.Delete);
+
+            if (!isAuthorized.Succeeded)
+            {
+                return Forbid();
+            }
 
             if (invoice != null)
             {
                 Invoice = invoice;
-                _context.Invoices.Remove(Invoice);
-                await _context.SaveChangesAsync();
+                Context.Invoices.Remove(Invoice);
+                await Context.SaveChangesAsync();
             }
 
             return RedirectToPage("./Index");

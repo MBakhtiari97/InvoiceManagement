@@ -2,40 +2,56 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InvoiceManagement.Authorization;
+using InvoiceManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using InvoiceManagement.Data.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace InvoiceManagement.Pages.Invoices
 {
-    public class DetailsModel : PageModel
+    public class DetailsModel : DI_BasePageModel
     {
-        private readonly InvoiceManagement.Data.ApplicationDbContext _context;
 
-        public DetailsModel(InvoiceManagement.Data.ApplicationDbContext context)
+        public DetailsModel(
+            ApplicationDbContext context,
+            IAuthorizationService authorizationService,
+            UserManager<IdentityUser> userManager)
+            : base(context, authorizationService, userManager)
         {
-            _context = context;
         }
 
-      public Invoice Invoice { get; set; } = default!; 
+        public Invoice Invoice { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Invoices == null)
+            if (id == null || Context.Invoices == null)
             {
                 return NotFound();
             }
 
-            var invoice = await _context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice = await Context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
             if (invoice == null)
             {
                 return NotFound();
             }
-            else 
+            else
             {
                 Invoice = invoice;
             }
+
+            //Authorization
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, invoice, InvoiceOperations.Read);
+
+            if (!isAuthorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             return Page();
         }
     }
