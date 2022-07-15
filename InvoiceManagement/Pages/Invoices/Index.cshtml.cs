@@ -29,7 +29,9 @@ namespace InvoiceManagement.Pages.Invoices
         {
             if (Context.Invoices != null)
             {
-                Invoice = await Context.Invoices.Where(I => I.CreatorId == UserManager.GetUserId(User)).ToListAsync();
+                Invoice = await Context.Invoices
+                    .Where(I => I.CreatorId == UserManager.GetUserId(User))
+                    .ToListAsync();
             }
         }
     }
