@@ -2,21 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InvoiceManagement.Authorization;
+using InvoiceManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using InvoiceManagement.Data.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace InvoiceManagement.Pages.Invoices
 {
-    public class EditModel : PageModel
+    public class EditModel : DI_BasePageModel
     {
-        private readonly InvoiceManagement.Data.ApplicationDbContext _context;
-
-        public EditModel(InvoiceManagement.Data.ApplicationDbContext context)
+        public EditModel(
+            ApplicationDbContext context,
+            IAuthorizationService authorizationService,
+            UserManager<IdentityUser> userManager)
+            : base(context, authorizationService, userManager)
         {
-            _context = context;
         }
 
         [BindProperty]
@@ -24,22 +29,32 @@ namespace InvoiceManagement.Pages.Invoices
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Invoices == null)
+            if (id == null || Context.Invoices == null)
             {
                 return NotFound();
             }
 
-            var invoice =  await _context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice =  await Context.Invoices.FirstOrDefaultAsync(m => m.InvoiceId == id);
             if (invoice == null)
             {
                 return NotFound();
             }
             Invoice = invoice;
+
+            //Authorization 
+
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, invoice, InvoiceOperations.Update);
+
+            if (!isAuthorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             return Page();
         }
 
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see https://aka.ms/RazorPagesCRUD.
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -47,11 +62,11 @@ namespace InvoiceManagement.Pages.Invoices
                 return Page();
             }
 
-            _context.Attach(Invoice).State = EntityState.Modified;
+            Context.Attach(Invoice).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await Context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -70,7 +85,7 @@ namespace InvoiceManagement.Pages.Invoices
 
         private bool InvoiceExists(int id)
         {
-          return (_context.Invoices?.Any(e => e.InvoiceId == id)).GetValueOrDefault();
+          return (Context.Invoices?.Any(e => e.InvoiceId == id)).GetValueOrDefault();
         }
     }
 }
