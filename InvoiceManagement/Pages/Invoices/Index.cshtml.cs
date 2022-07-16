@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using InvoiceManagement.Authorization;
 using InvoiceManagement.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -27,12 +28,20 @@ namespace InvoiceManagement.Pages.Invoices
 
         public async Task OnGetAsync()
         {
-            if (Context.Invoices != null)
+            var invoices =
+                from i in Context.Invoices
+                select i;
+
+            var isManager = User.IsInRole(Constants.InvoiceManagersRole);
+
+            var currentUserId = UserManager.GetUserId(User);
+
+            if (!isManager)
             {
-                Invoice = await Context.Invoices
-                    .Where(I => I.CreatorId == UserManager.GetUserId(User))
-                    .ToListAsync();
+                invoices = invoices.Where(i => i.CreatorId == currentUserId);
             }
+
+            Invoice = await invoices.ToListAsync();
         }
     }
 }
