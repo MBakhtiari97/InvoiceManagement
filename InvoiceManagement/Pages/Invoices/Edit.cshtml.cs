@@ -76,6 +76,8 @@ namespace InvoiceManagement.Pages.Invoices
                 return Forbid();
             }
 
+            Invoice.Status = invoice.Status;
+
             //Update
             Context.Attach(Invoice).State = EntityState.Modified;
 
