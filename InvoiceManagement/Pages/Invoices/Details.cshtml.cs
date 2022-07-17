@@ -47,12 +47,40 @@ namespace InvoiceManagement.Pages.Invoices
             var isAuthorized = await AuthorizationService.AuthorizeAsync(
                 User, invoice, InvoiceOperations.Read);
 
-            if (!isAuthorized.Succeeded)
+            var isManager = User.IsInRole(Constants.InvoiceManagersRole);
+
+            if (!isAuthorized.Succeeded && !isManager)
             {
                 return Forbid();
             }
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync(int id, InvoiceStatus status)
+        {
+            Invoice = await Context.Invoices.FindAsync(id);
+
+            if (Invoice == null)
+                return NotFound();
+
+            var invoiceOperation = status == InvoiceStatus.Approved
+                ? InvoiceOperations.Approve
+                : InvoiceOperations.Reject;
+
+            var isAuthorized = await AuthorizationService.AuthorizeAsync(
+                User, Invoice, invoiceOperation);
+
+            if (!isAuthorized.Succeeded)
+            {
+                return Forbid();
+            }
+
+            Invoice.Status = status;
+            Context.Invoices.Update(Invoice);
+            await Context.SaveChangesAsync();
+
+            return Redirect("./Index");
         }
     }
 }

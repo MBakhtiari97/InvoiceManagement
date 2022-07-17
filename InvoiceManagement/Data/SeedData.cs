@@ -22,7 +22,6 @@ namespace InvoiceManagement.Data
             }
         }
 
-
         //Want to ensure the user is existed
         private static async Task<string> EnsureUser(
             IServiceProvider serviceProvider,
