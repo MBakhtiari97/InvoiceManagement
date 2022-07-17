@@ -56,6 +56,7 @@ namespace InvoiceManagement.Authorization
 
         //Roles
         public static readonly string InvoiceManagersRole = "InvoiceManager";
+        public static readonly string InvoiceAdminRole = "InvoiceAdmin";
 
     }
 }

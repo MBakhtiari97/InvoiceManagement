@@ -15,10 +15,14 @@ namespace InvoiceManagement.Data
             using (var context = new ApplicationDbContext(
                        serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
+                //Manager
                 // Ensuring the user and role are existed 
                 var managerUid = await EnsureUser(serviceProvider, "manager@demo.com", password);
-
                 await EnsureRole(serviceProvider, managerUid, Constants.InvoiceManagersRole);
+
+                //Admin
+                var adminUid = await EnsureUser(serviceProvider, "admin@demo.com", password);
+                await EnsureRole(serviceProvider, adminUid, Constants.InvoiceAdminRole);
             }
         }
 
