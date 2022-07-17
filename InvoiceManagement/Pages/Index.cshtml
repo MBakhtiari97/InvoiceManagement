@@ -35,10 +35,22 @@
             labels: labels,
             datasets: [
                 {
-                    label: "Revenue",
-                    backgroundColor: "rgb(255,99,132)",
-                    borderColor: "rgb(255,99,132)",
-                    data: @Json.Serialize(Model.revenue)
+                    label: "Submitted Revenues",
+                    backgroundColor: "rgb(111, 110, 118)",
+                    borderColor: "rgb(111, 110, 118)",
+                    data: @Json.Serialize(Model.revenueSubmitted)
+                },
+                {
+                    label: "Approved Revenues",
+                    backgroundColor: "rgb(9, 182, 131)",
+                    borderColor: "rgb(9, 182, 131)",
+                    data: @Json.Serialize(Model.revenueApproved)
+                },
+                {
+                    label: "Rejected Revenues",
+                    backgroundColor: "rgb(240, 93, 105)",
+                    borderColor: "rgb(240, 93, 105)",
+                    data: @Json.Serialize(Model.revenueRejected)
                 }
             ]
         };

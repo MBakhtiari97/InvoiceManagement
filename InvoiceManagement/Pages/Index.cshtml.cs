@@ -1,4 +1,5 @@
 ﻿using InvoiceManagement.Data;
+using InvoiceManagement.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,11 +10,13 @@ namespace InvoiceManagement.Pages
     public class IndexModel : PageModel
     {
 
-        public Dictionary<string, int> revenue;
+        public Dictionary<string, int> revenueSubmitted;
+        public Dictionary<string, int> revenueApproved;
+        public Dictionary<string, int> revenueRejected;
         private readonly ILogger<IndexModel> _logger;
         private readonly ApplicationDbContext _context;
 
-        public IndexModel( ILogger<IndexModel> logger, ApplicationDbContext context)
+        public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
@@ -21,7 +24,36 @@ namespace InvoiceManagement.Pages
 
         public void OnGet()
         {
-            revenue = new Dictionary<string, int>()
+            InitDict(ref revenueSubmitted);
+            InitDict(ref revenueApproved);
+            InitDict(ref revenueRejected);
+
+            var invoices = _context.Invoices.ToList();
+            foreach (var invoice in invoices)
+            {
+                switch (invoice.Status)
+                {
+                    case InvoiceStatus.Submitted:
+                        revenueSubmitted[invoice.InvoiceMonth] += (int)invoice.InvoiceAmount;
+                        break;
+
+                    case InvoiceStatus.Approved:
+                        revenueApproved[invoice.InvoiceMonth] += (int)invoice.InvoiceAmount;
+                        break;
+
+                    case InvoiceStatus.Rejected:
+                        revenueRejected[invoice.InvoiceMonth] += (int)invoice.InvoiceAmount;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void InitDict(ref Dictionary<string, int> dict)
+        {
+            dict = new Dictionary<string, int>()
             {
                 { "January", 0 },
                 { "February", 0 },
@@ -36,12 +68,6 @@ namespace InvoiceManagement.Pages
                 { "November", 0 },
                 { "December", 0 }
             };
-
-            var invoices = _context.Invoices.ToList();
-            foreach (var invoice in invoices)
-            {
-                revenue[invoice.InvoiceMonth] += (int)invoice.InvoiceAmount;
-            }
         }
     }
 }
