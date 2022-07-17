@@ -1,4 +1,5 @@
 ﻿@page
+@using InvoiceManagement.Authorization
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
@@ -9,7 +10,14 @@
 </div>
 
 <div>
-    <canvas id="myChart"></canvas>
+    @if (User.IsInRole(Constants.InvoiceAdminRole))
+    {
+        <canvas id="myChart"></canvas>
+    }
+    else
+    {
+        <h3 class="text-danger text-center">Only Admin Can See The Graph.</h3>
+    }
 </div>
 
 @section Scripts{
@@ -38,18 +46,21 @@
                     label: "Submitted Revenues",
                     backgroundColor: "rgb(111, 110, 118)",
                     borderColor: "rgb(111, 110, 118)",
+                    cubicInterpolationMode:"monotone",
                     data: @Json.Serialize(Model.revenueSubmitted)
                 },
                 {
                     label: "Approved Revenues",
                     backgroundColor: "rgb(9, 182, 131)",
                     borderColor: "rgb(9, 182, 131)",
+                    cubicInterpolationMode:"monotone",
                     data: @Json.Serialize(Model.revenueApproved)
                 },
                 {
                     label: "Rejected Revenues",
                     backgroundColor: "rgb(240, 93, 105)",
                     borderColor: "rgb(240, 93, 105)",
+                    cubicInterpolationMode:"monotone",
                     data: @Json.Serialize(Model.revenueRejected)
                 }
             ]
