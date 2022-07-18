@@ -7,17 +7,29 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+#region SQL Server Configurations
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+#endregion
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+#region Identity
+
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddRoles<IdentityRole>() 
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 
+#endregion
+
 builder.Services.AddRazorPages();
+
+#region Configure Identity
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -31,6 +43,11 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
+
+#endregion
+
+#region Authorization
+
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -38,9 +55,16 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
+#endregion
+
+#region IoC
+
 builder.Services.AddScoped<IAuthorizationHandler, InvoiceCreatorAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, InvoiceManagerAuthorizationHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, InvoiceAdminAuthorizationHandler>();
+
+#endregion
+
 
 var app = builder.Build();
 
@@ -48,7 +72,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await SeedData.Initialize(services);
+
+    //It will automatically run the migration process ,
+    //so if we run the project migration and database update will happen
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    context.Database.Migrate();
+
+    //Getting the password from secret manager
+    var seedUserPass = builder.Configuration.GetValue<string>("SeedUserPass");
+    
+    //Initializing roles if there was not exists
+    await SeedData.Initialize(services, seedUserPass);
 }
 
 // Configure the HTTP request pipeline.

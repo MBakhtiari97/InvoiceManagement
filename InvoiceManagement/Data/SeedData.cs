@@ -9,7 +9,7 @@ namespace InvoiceManagement.Data
     {
         public static async Task Initialize(
             IServiceProvider serviceProvider,
-            string password = "Test@123")
+            string password)
         {
             //cannot use DI here so using service provider to get context
             using (var context = new ApplicationDbContext(
